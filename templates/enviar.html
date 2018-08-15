@@ -1,0 +1,16 @@
+{% import "bootstrap/wtf.html" as wtf %}
+
+<h1>UORER</h1>
+<br><br>
+
+{{ wtf.quick_form(form) }}
+
+<!-- O código abaixo faz as mensagens da função flash() aparecerem na página do site -->
+{% for message in get_flashed_messages() %}
+	<div class="container">
+		<div class="lert alert-warning">
+			<button type="button" class="close" data-dismiss="alert">&times;</button>
+			{{ message }}
+		</div>
+	</div>
+{% endfor %}

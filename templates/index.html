@@ -1,0 +1,215 @@
+{% import "bootstrap/wtf.html" as wtf %}
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>UORER app</title>
+    <script type="text/javascript" src="//momentjs.com/downloads/moment.js" charset="utf-8"></script>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js" charset="utf-8"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script> <!-- Plotly.js -->
+    <script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+            /* CONFIGURANDO E INICIANDO O WEBSOCKET DO LADO DO CLIENTE */
+            // Use a "/test" namespace.
+            // An application can open a connection on multiple namespaces, and
+            // Socket.IO will multiplex all those connections on a single
+            // physical channel. If you don't care about multiple channels, you
+            // can set the namespace to an empty string.
+            namespace = '/test';
+            
+            // Connect to the Socket.IO server.
+            // The connection URL has the following format:
+            //     http[s]://<domain>:<port>[/<namespace>]
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+
+            // Event handler for new connections.
+            // The callback function is invoked when a connection with the
+            // server is established.
+            socket.on('connect', function() {
+                socket.emit('my_event', {data: 'Conectado ao servidor'});
+            });
+            socket.on('statusConexao', function(mensagem) {
+                $('#conexaoServidor').html('<p>Status: ' + mensagem.data);
+            });
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+            
+            moment.locale('pt-BR'); // definindo local como o Brasil
+
+            // Relógio em tempo real
+            $('#dataHora').html(moment().locale('pt').format('DD[/]MM[/]YYYY [-] HH[:]mm[:]ss'));
+            window.setInterval(function() {
+                $('#dataHora').html(moment().locale('pt').format('DD[/]MM[/]YYYY [-] HH[:]mm[:]ss'));
+            }, 1000);
+
+
+            minhaMeta = {{ minhaMeta|tojson }};
+            $('#inicioMeta').html(moment(minhaMeta['inicio']).format('YYYY-MM-DD HH:mm:ss'))
+            $('#fimMeta').html(moment(minhaMeta['fim']).format('YYYY-MM-DD HH:mm:ss'))
+
+
+            /* CONSTRUINDO O GRÁFICO PELA PRIMEIRA VEZ */
+            var tempX = {{ dataHora_ultimos20|tojson }};
+            for(var i = 0; i < tempX.length; i++) {
+                tempX[i] = moment(tempX[i]).format('YYYY-MM-DD HH:mm:ss');
+            }
+            
+            var tempY = {{ vazao_ultimos20 }};
+
+            var curva = [{
+              x: tempX,
+              y: tempY,
+              mode: 'lines+markers'
+            }];
+
+            var layout = {
+              title:'Consumo em tempo real',
+              xaxis: {
+                title: 'Data e hora'
+                /*,titlefont: {
+                  family: 'Courier New, monospace'
+                  ,size: 18
+                  ,color: '#7f7f7f'
+                }*/
+              },
+              yaxis: {
+                title: 'L/min'
+                /*,range: [-1, 30]
+                ,titlefont: {
+                   family: 'Courier New, monospace'
+                  ,size: 18
+                  ,color: '#7f7f7f'
+                }*/
+              }
+            };
+
+            Plotly.newPlot('myDiv', curva, layout);
+
+
+
+            var cte = {{ cte }};
+            var PM = {{ PM }};
+            // Consumo em m³, L e R$
+            var consumoMes = [{{ consumoMes }}, {{ consumoMes }}*1000, {{ consumoMes }}*PM];
+            
+            // Colocado logo de início para converter a data e hora enviados pelo servidor para o formato
+            // e localidade do cliente
+            $('#log').html('Vazão: ' + tempY.slice(-1)[0].toFixed(2) + ' L/min<br>'
+                             + 'Data e hora: ' + tempX.slice(-1)[0]);
+            
+            
+            // Toda vez que o servidor enviar 'my_response' a função abaixo é rodada
+            socket.on('my_response', function(mensagem) {
+                consumoMes[0] = mensagem.valor*cte/1000000; // Consumo em m³
+                consumoMes[1] = consumoMes[0]*1000;         // Consumo em L
+                consumoMes[2] = consumoMes[0]*PM;           // Consumo em R$              
+                $('#consumoAcumulado').html('<p>' + consumoMes[0].toFixed(2) + ' m³</p>\
+                                             <p>' + consumoMes[1].toFixed(2) + ' L</p>\
+                                             <p>R$ '+ consumoMes[2].toFixed(2) + '</p>');
+
+                
+                // retirando o primeiro, ou mais antigo, valor de cada vetor
+                tempX.shift();
+                tempY.shift();
+                // adicionando os novos dados ao final de cada vetor
+                tempX.push(moment(mensagem.dataHora).format('YYYY-MM-DD HH:mm:ss')); 
+                tempY.push(mensagem.vazaoAtual);
+                $('#log').html('Vazão: ' + tempY.slice(-1)[0].toFixed(2) + ' L/min<br>'
+                             + 'Data e hora: ' + tempX.slice(-1)[0]);
+                
+
+                var update = {
+                    y: [[tempY.slice(-1)[0]]], 
+                    x: [[tempX.slice(-1)[0]]]
+                };
+                Plotly.extendTraces('myDiv', update, [0]);
+            });
+
+
+
+            
+
+           
+            consumoTotal = {{ consumoTotal|tojson }};
+            $('#consumoTotal').html('Consumo total acumulado: ' + consumoTotal['valor']+' m³' 
+                + ' desde ' + moment(consumoTotal.dataHora).format('YYYY-MM-DD HH:mm:ss'))
+
+            
+            
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////
+            /* PING-PONG ENTRE SERVIDOR E CLIENTE PARA MEDIR A LATÊNCIA */
+            // Interval function that tests message latency by sending a "ping"
+            // message. The server then responds with a "pong" message and the
+            // round trip time is measured.
+            var ping_pong_times = [];
+            var start_time;
+            window.setInterval(function() {
+                start_time = (new Date).getTime();
+                socket.emit('my_ping');
+            }, 1000);
+
+            // Handler for the "pong" message. When the pong is received, the
+            // time from the ping is stored, and the average of the last 30
+            // samples is average and displayed.
+            socket.on('my_pong', function() {
+                var latency = (new Date).getTime() - start_time;
+                ping_pong_times.push(latency);
+                ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
+                var sum = 0;
+                for (var i = 0; i < ping_pong_times.length; i++)
+                    sum += ping_pong_times[i];
+                $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
+            });
+        });
+    </script>
+
+</head>
+<body>
+	<h1>UORER</h1>
+	<p>Async mode is: <b>{{ async_mode }}</b></p>
+	<p>Latência média ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
+    <div id='conexaoServidor'><br></div>
+	<br>
+	<div id="dataHora"></div>
+	
+    <h3>Bem vindo, <span id="usuario">{{ eu.nome }}</span>!</h3>
+    
+    <h3>Meta:</h3>
+    <div id="metaAtual">
+        <table>
+            <tr>
+                <th>Valor</th>
+                <th>Início</th>
+                <th>Fim</th>
+            </tr>
+            <tr>
+                <th>{{ "{0:.2f}".format(minhaMeta.valor) + ' m³' }}</th>
+                <th><div id='inicioMeta'></div></th>
+                <th><div id='fimMeta'></div></th>
+            </tr>
+        </table>
+    </div>
+
+    <h3>Consumo acumulado:</h3>
+    <div id="consumoAcumulado">
+        <p>{{ "{0:.2f}".format(consumoMes) }} m³</p>
+        <p>{{ "{0:.2f}".format(consumoMes*1000) }} L</p>
+        <p>R$ {{ "{0:.2f}".format(consumoMes*PM) }} </p>
+    </div>
+
+    <h3>Consumo atual:</h3>
+	<div id="log">
+        <br>
+        <br>
+    </div>
+
+    <div id="myDiv" style="width: 800px; height: 500px;">
+        <!-- Plotly chart will be drawn inside this DIV -->
+    </div>
+
+    <br><br>
+    <div id='consumoTotal'></div>
+</body>
+</html>

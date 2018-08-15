@@ -1,0 +1,26 @@
+Olá {{ usuario }}!
+
+
+Durante o último dia, desde {{ horaMeta }}h de ontem, você consumiu {{ "{:.2f}".format(consumo["dia"]["%"]) }}% da sua meta diária.
+
+{% if consumo["dia"]["%"] < 100 %}
+	Parabéns! Você está no caminho certo!
+{% else %}
+	CUIDADO! Amanhã tente economizar água. Para mais dicas em como reduzir o consumo verifique nossa página.
+{% endif %}
+
+
+Consumo:
+Dia (Desde {{ horaMeta }}h de ontem):
+	{{ "{:.2f}".format(consumo["dia"]["m³"]) }} m³
+	{{ "{:.2f}".format(consumo["dia"]["L"]) }} L
+	R$ {{ "{:.2f}".format(consumo["dia"]["R$"]) }}
+	{{ "{:.2f}".format(consumo["dia"]["%"]) }}% da meta diária
+Mês (Desde {{ inicioMetaMensal }}):
+	{{ "{:.2f}".format(consumo["mês"]["m³"]) }} m³
+	{{ "{:.2f}".format(consumo["mês"]["L"]) }} L
+	R$ {{ "{:.2f}".format(consumo["mês"]["R$"]) }}
+	{{ "{:.2f}".format(consumo["mês"]["%"]) }}% da meta mensal
+
+
+Atenção: Não responda este email!

@@ -1,0 +1,14 @@
+ATENÇÃO!
+
+Você já consumiu {{ porcentagem }} da sua meta {% if intervaloMeta == "dia" %} diária {% elif intervaloMeta == "mês" %} mensal {% endif %}.
+
+A equipe do UORER sugere que você
+{% if porcentagem == "100%" %}
+	evite o máximo possível o consumo de água desnecessário como longos banhos, lavagem de carros e limpeza de quintais e calçadas com água.
+{% elif porcentagem == "80%" %}
+	tenha cautela no consumo de água no restante do {{ intervaloMeta }}.
+{% endif %}
+
+Para mais dicas em como reduzir o consumo de água verifique a nossa página.
+
+Atenção: Não responda este email!
