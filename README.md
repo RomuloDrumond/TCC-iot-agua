@@ -17,7 +17,7 @@ A prototype was developed and installed on a residential faucet, as the images b
   <img width="460" src="https://raw.githubusercontent.com/RomuloDrumond/TCC-iot-agua/master/images/prototype02.png">
 </p>
 
-The document in Portuguese can be found on [here](https://github.com/RomuloDrumond/TCC-iot-agua/raw/master/TCC%20vFinal.pdf)
+The document in Portuguese can be found on [TCC vFinal.pdf](https://github.com/RomuloDrumond/TCC-iot-agua/raw/master/TCC%20vFinal.pdf).
 
 This work can be divided into three major parts:
 
@@ -31,17 +31,34 @@ Each one of them will be presented in more details below
 
 A web app was developed using Flask microframework for python. To install dependencies run `pip install -r requirements.txt` on the main directory.
 
-## Built with
+## Built with:
 
 * Flask: web microframework
 * celery: for scheduling sending e-mails and some routines
-* Flask-SocketIO: to add real-time updating to the webpage using websockets
+* Flask-SocketIO: to add real-time updating to the webpage using WebSockets
 * Flask-SQLAlchemy: ORM for simplifying using different databases
 
 
 # IoT device
+O IoT device was constructed as the schematic below.
+
+<p align="center">
+  <img width="460" src="https://raw.githubusercontent.com/RomuloDrumond/TCC-iot-agua/master/images/iot_device.png">
+</p>
+
+## Built with:
+
+* Flow sensor SEN-HZ21WA of SAIER
+* Arduino Uno
+* Wi-fi module ESP8266-01 with an adaptive module to convert 3.3 V logic and power supply to 5 V
 
 
 # Firmware
+As the ESP8266 was used as a modem, the whole firmware code was written on Arduino's language. We can highlight the use of:
 
-Para mais detalhes e para ter acesso ao código utilizado no Arduino Uno acesse pdf "TCC vFinal.pdf".
+* SoftwareSerial library to enable monitoring of the system
+* AT commands for communication between Arduino UNO and ESP8266
+* HTTP for transferring data over the internet
+* JSON data format
+
+The Arduino code can be found on "APÊNDICE A – FIRMWARE DO MEDIDOR INTELIGENTE" of [TCC vFinal.pdf](https://github.com/RomuloDrumond/TCC-iot-agua/raw/master/TCC%20vFinal.pdf).
