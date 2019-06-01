@@ -43,7 +43,7 @@ A web app was developed using Flask microframework for python. To install depend
 O IoT device was constructed as the schematic below.
 
 <p align="center">
-  <img width="460" src="https://raw.githubusercontent.com/RomuloDrumond/TCC-iot-agua/master/images/iot_device.png">
+  <img width="600" src="https://raw.githubusercontent.com/RomuloDrumond/TCC-iot-agua/master/images/iot_device.png">
 </p>
 
 ## Built with:
