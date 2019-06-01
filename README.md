@@ -9,8 +9,12 @@ This repository contains my final graduation course work, in Portuguese "Trabalh
 
 A prototype was developed and installed on a residential faucet, as the images below show it:
 
-![alt text](https://raw.githubusercontent.com/RomuloDrumond/TCC-iot-agua/master/images/prototype01.png)
+<p align="center">
+  <img width="460" src="https://raw.githubusercontent.com/RomuloDrumond/TCC-iot-agua/master/images/prototype01.png">
+</p>
 
-![alt text](https://raw.githubusercontent.com/RomuloDrumond/TCC-iot-agua/master/images/prototype02.png)
+<p align="center">
+  <img width="460" src="https://raw.githubusercontent.com/RomuloDrumond/TCC-iot-agua/master/images/prototype02.png">
+</p>
 
 The document in Portuguese can be found on [here](https://github.com/RomuloDrumond/TCC-iot-agua/raw/master/TCC%20vFinal.pdf)
